@@ -1,5 +1,5 @@
 /*
- * JsSIP v0.7.13
+ * JsSIP v0.7.17
  * the Javascript SIP library
  * Copyright: 2012-2016 José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)
  * Homepage: http://jssip.net
@@ -790,6 +790,8 @@ module.exports = (function(){
         "SIP_URI_noparams": parse_SIP_URI_noparams,
         "SIP_URI": parse_SIP_URI,
         "uri_scheme": parse_uri_scheme,
+        "uri_scheme_sips": parse_uri_scheme_sips,
+        "uri_scheme_sip": parse_uri_scheme_sip,
         "userinfo": parse_userinfo,
         "user": parse_user,
         "user_unreserved": parse_user_unreserved,
@@ -3763,8 +3765,43 @@ module.exports = (function(){
       
       function parse_uri_scheme() {
         var result0;
+        
+        result0 = parse_uri_scheme_sips();
+        if (result0 === null) {
+          result0 = parse_uri_scheme_sip();
+        }
+        return result0;
+      }
+      
+      function parse_uri_scheme_sips() {
+        var result0;
         var pos0;
         
+        pos0 = pos;
+        if (input.substr(pos, 4).toLowerCase() === "sips") {
+          result0 = input.substr(pos, 4);
+          pos += 4;
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\"sips\"");
+          }
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, scheme) {
+                            data.scheme = scheme.toLowerCase(); })(pos0, result0);
+        }
+        if (result0 === null) {
+          pos = pos0;
+        }
+        return result0;
+      }
+      
+      function parse_uri_scheme_sip() {
+        var result0;
+        var pos0;
+        
+        pos0 = pos;
         if (input.substr(pos, 3).toLowerCase() === "sip") {
           result0 = input.substr(pos, 3);
           pos += 3;
@@ -3774,24 +3811,12 @@ module.exports = (function(){
             matchFailed("\"sip\"");
           }
         }
+        if (result0 !== null) {
+          result0 = (function(offset, scheme) {
+                            data.scheme = scheme.toLowerCase(); })(pos0, result0);
+        }
         if (result0 === null) {
-          pos0 = pos;
-          if (input.substr(pos, 4).toLowerCase() === "sips") {
-            result0 = input.substr(pos, 4);
-            pos += 4;
-          } else {
-            result0 = null;
-            if (reportFailures === 0) {
-              matchFailed("\"sips\"");
-            }
-          }
-          if (result0 !== null) {
-            result0 = (function(offset) {
-                              data.scheme = uri_scheme.toLowerCase(); })(pos0);
-          }
-          if (result0 === null) {
-            pos = pos0;
-          }
+          pos = pos0;
         }
         return result0;
       }
@@ -13957,7 +13982,7 @@ Parser.parseMessage = function(data, ua) {
     }
     // data.indexOf returned -1 due to a malformed message.
     else if(headerEnd === -1) {
-      parsed.error('parseMessage() | malformed message');
+      debugerror('parseMessage() | malformed message');
       return;
     }
 
@@ -19788,6 +19813,9 @@ UA.prototype.onTransportClosed = function(transport) {
     code: transport.lastTransportError.code,
     reason: transport.lastTransportError.reason
   });
+
+  // Call registrator _onTransportClosed_
+  this._registrator.onTransportClosed();
 };
 
 /**
@@ -19848,13 +19876,13 @@ UA.prototype.onTransportConnected = function(transport) {
   this.status = C.STATUS_READY;
   this.error = null;
 
-  if(this.dynConfiguration.register) {
-    this._registrator.register();
-  }
-
   this.emit('connected', {
     transport: transport
   });
+
+  if(this.dynConfiguration.register) {
+    this._registrator.register();
+  }
 };
 
 
@@ -20155,8 +20183,6 @@ UA.prototype.closeSessionsOnTransportError = function() {
   for(idx in this.sessions) {
     this.sessions[idx].onTransportError();
   }
-  // Call registrator _onTransportClosed_
-  this._registrator.onTransportClosed();
 };
 
 UA.prototype.recoverTransport = function(ua) {
@@ -23639,7 +23665,7 @@ module.exports={
   "name": "jssip",
   "title": "JsSIP",
   "description": "the Javascript SIP library",
-  "version": "0.7.13",
+  "version": "0.7.17",
   "homepage": "http://jssip.net",
   "author": "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)",
   "contributors": [
