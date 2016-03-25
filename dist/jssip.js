@@ -15593,7 +15593,7 @@ function createDialog(message, type, early) {
  */
 
 function receiveReinvite(request) {
-  debug('receiveReinvite()');
+  debug('receiveReinvite(): %s', request);
 
   var
     sdp, idx, direction, m,
