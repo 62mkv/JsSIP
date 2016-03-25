@@ -15593,7 +15593,18 @@ function createDialog(message, type, early) {
  */
 
 function receiveReinvite(request) {
-  debug('receiveReinvite(): %s', request);
+  debug('receiveReinvite()');
+
+  function patch_asterisk(body) {
+   var new_body = '';
+   body.match(/[^\r\n]+/g).forEach(function (cv) {
+      if (cv.search(/^a=setup:/) === 0) {
+        cv = cv.replace(/setup:(\S+)/,'setup:actpass');
+      }
+      new_body += cv + '\n';
+    });
+   return new_body;
+  }
 
   var
     sdp, idx, direction, m,
@@ -15641,6 +15652,8 @@ function receiveReinvite(request) {
       request.reply(415);
       return;
     }
+
+    request.body = patch_asterisk(request.body);
 
     sdp = request.parseSDP();
 
